@@ -73,8 +73,8 @@ test['x'] = test['ingredients'].progress_apply(preprocess)
 # Compute Tf-idf scores
 # Inverse Document Frequency reflects impoirtance of word in a collection of words (recipes)
 vectorizer = make_pipeline(TfidfVectorizer(sublinear_tf=True),
-                           FunctionTransformer(lambda x: x.astype('float16'), validate=False)
-                           )
+                            FunctionTransformer(lambda x: x.astype('float16'), validate=False)
+                            )
 
 x_train = vectorizer.fit_transform(train['x'].values)
 x_train.sort_indices()
