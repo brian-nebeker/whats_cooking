@@ -22,6 +22,14 @@ tqdm.pandas()
 class CookingClassifier(object):
     def __init__(self):
 
+    def execute(self):
+        self._read_data()
+        self._preprocess()
+        self._vectorize()
+        self._label_encoder()
+        self._fit_model()
+        self._predict()
+
     def _read_data(self):
         self.train = pd.read_json('./data/train.json')
         self.test = pd.read_json('./data/test.json')
