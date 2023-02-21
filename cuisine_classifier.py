@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 from nltk.stem import WordNetLemmatizer
+import nltk
+nltk.download('wordnet')
 # from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 # from sklearn.linear_model import LogisticRegression, SGDClassifier
@@ -12,37 +14,23 @@ from sklearn.multiclass import OneVsRestClassifier
 # from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from sklearn.pipeline import make_pipeline, make_union
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn.preprocessing import FunctionTransformer, LabelEncoder
 from tqdm import tqdm
 tqdm.pandas()
 
 class CookingClassifier(object):
-    def __init__(self,
-                 tune_parameters: bool = True,
-                 parameter_dict: dict = None):
-        self.tune_parameters = tune_parameters
-        self.parameter_dict = parameter_dict
-
-    def fit(self):
-        #fit model
-        pass
-
-    def predict(self):
-        #predict data
-        pass
-
-    def tune_model(self):
-        if self.tune_parameters:
-            self._tune_model()
+    def __init__(self):
 
     def _read_data(self):
         self.train = pd.read_json('./data/train.json')
         self.test = pd.read_json('./data/test.json')
 
-        self.train['num_ingredients'] = self.train['ingredients'].apply(len)
+        self.train.loc[:, 'num_ingredients'] = self.train.loc[:, 'ingredients'].apply(len)
         self.train = self.train[self.train['num_ingredients'] > 1]
 
-    def _process_text(self, ingredients):
+
+    def _process_ingredients(self, ingredients):
         lemmatizer = WordNetLemmatizer()
         ingredients_text = ' '.join(ingredients)
         ingredients_text = ingredients_text.lower()
@@ -56,7 +44,34 @@ class CookingClassifier(object):
             if len(word) > 0: words.append(word)
         return ' '.join(words)
 
-    def _pre_process(self):
-        self.train['x'] = self.train['ingredients'].progress_apply(_process_text)
-        self.test['x'] = self.test['ingredients'].progress_apply(_process_text)
+    def _preprocess(self):
+        self.train['x'] = self.train['ingredients'].progress_apply(self._process_ingredients)
+        self.test['x'] = self.test['ingredients'].progress_apply(self._process_ingredients)
 
+    def _vectorize(self):
+        vectorizer = make_pipeline(TfidfVectorizer(sublinear_tf=True),
+                                   FunctionTransformer(lambda x: x.astype('float16'), validate=False)
+                                   )
+        self.x_train = vectorizer.fit_transform(self.train['x'].values)
+        self.x_train.sort_indices()
+        self.x_test = vectorizer.transform(self.test['x'].values)
+
+    def _label_encoder(self):
+        self.label_encoder = LabelEncoder()
+        self.y_train = self.label_encoder.fit_transform(self.train['cuisine'].values)
+
+    def _fit_model(self):
+        self.estimator = SVC(C=80,
+                        kernel='rbf',
+                        gamma=1.7,
+                        coef0=1,
+                        cache_size=500)
+
+        self.classifier = OneVsRestClassifier(self.estimator, n_jobs=-1)
+        self.classifier.fit(self.x_train, self.y_train)
+
+    def _predict(self):
+        self.y_pred = self.label_encoder.inverse_transform(self.classifier.predict(self.x_train))
+        self.y_true = self.label_encoder.inverse_transform(self.y_train)
+        print(self.y_pred)
+        print("END")
