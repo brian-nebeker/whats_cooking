@@ -81,5 +81,3 @@ class CookingClassifier(object):
     def _predict(self):
         self.y_pred = self.label_encoder.inverse_transform(self.classifier.predict(self.x_train))
         self.y_true = self.label_encoder.inverse_transform(self.y_train)
-        print(self.y_pred)
-        print("END")
