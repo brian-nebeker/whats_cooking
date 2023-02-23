@@ -20,19 +20,31 @@ from tqdm import tqdm
 tqdm.pandas()
 
 class CookingClassifier(object):
-    def __init__(self):
+    def __init__(self,
+                 do_train: bool = True,
+                 do_predict: bool = True,
+                 asset_file_path = './data/'):
+        self.do_train = do_train
+        self.do_predict = do_predict
+        self.asset_file_path = asset_file_path
+
 
     def execute(self):
         self._read_data()
         self._preprocess()
         self._vectorize()
         self._label_encoder()
-        self._fit_model()
-        self._predict()
+        if self.do_train:
+            self._train_model()
+            print("Trained Model")
+        if self.do_predict:
+            self._predict()
+            print("Predicted Test Set")
+        print("Finished Execute")
 
     def _read_data(self):
-        self.train = pd.read_json('./data/train.json')
-        self.test = pd.read_json('./data/test.json')
+        self.train = pd.read_json(f"{self.asset_file_path}train.json")
+        self.test = pd.read_json(f"{self.asset_file_path}test.json")
 
         self.train.loc[:, 'num_ingredients'] = self.train.loc[:, 'ingredients'].apply(len)
         self.train = self.train[self.train['num_ingredients'] > 1]
@@ -68,7 +80,7 @@ class CookingClassifier(object):
         self.label_encoder = LabelEncoder()
         self.y_train = self.label_encoder.fit_transform(self.train['cuisine'].values)
 
-    def _fit_model(self):
+    def _train_model(self):
         self.estimator = SVC(C=80,
                         kernel='rbf',
                         gamma=1.7,
@@ -77,6 +89,7 @@ class CookingClassifier(object):
 
         self.classifier = OneVsRestClassifier(self.estimator, n_jobs=-1)
         self.classifier.fit(self.x_train, self.y_train)
+        print("Model Trained")
 
     def _predict(self):
         self.y_pred = self.label_encoder.inverse_transform(self.classifier.predict(self.x_train))
