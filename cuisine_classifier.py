@@ -89,7 +89,6 @@ class CookingClassifier(object):
 
         self.classifier = OneVsRestClassifier(self.estimator, n_jobs=-1)
         self.classifier.fit(self.x_train, self.y_train)
-        print("Model Trained")
 
     def _predict(self):
         self.y_pred = self.label_encoder.inverse_transform(self.classifier.predict(self.x_train))
