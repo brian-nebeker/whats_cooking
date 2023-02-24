@@ -1,25 +1,19 @@
 import re
+import nltk
+import joblib
 import numpy as np
 import pandas as pd
-import joblib
-from collections import defaultdict
 from nltk.stem import WordNetLemmatizer
-import nltk
-nltk.download('wordnet')
-# from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
-# from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.metrics import classification_report
-from sklearn.model_selection import cross_validate
 from sklearn.multiclass import OneVsRestClassifier
-# from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
-from sklearn.pipeline import make_pipeline, make_union
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, LabelEncoder
 from tqdm import tqdm
-tqdm.pandas()
 
+tqdm.pandas()
+nltk.download('wordnet')
 
 class CookingClassifier:
     def __init__(self,
@@ -73,7 +67,7 @@ class CookingClassifier:
         self.x_train = self.vectorizer.fit_transform(self.train['x'].values)
         self.x_train.sort_indices()
         self.x_test = self.vectorizer.transform(self.test['x'].values)
-        joblib.dump(value=self.vectorizer, filename=f"{self.asset_file_path}temp2")
+        joblib.dump(value=self.vectorizer, filename=f"{self.asset_file_path}temp")
 
     def _vectorize(self):
         self.vectorizer = TfidfVectorizer(sublinear_tf=True)
