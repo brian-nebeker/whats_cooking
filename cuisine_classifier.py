@@ -1,7 +1,6 @@
 import re
 import nltk
 import joblib
-import numpy as np
 import pandas as pd
 from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -21,6 +20,13 @@ class CookingClassifier:
                  do_train: bool = True,
                  pred_ingredients: list = None,
                  asset_file_path: str = './data/'):
+        """
+        A class to train models and predict cuisine classification
+
+        :param do_train: boolean to re-train model
+        :param pred_ingredients: list of ingredients to predict cuisine
+        :param asset_file_path: string of where data is located in file directory
+        """
         self.do_train = do_train
         self.pred_ingredients = pred_ingredients
         self.asset_file_path = asset_file_path
