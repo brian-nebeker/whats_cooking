@@ -15,6 +15,7 @@ from tqdm import tqdm
 tqdm.pandas()
 nltk.download('wordnet')
 
+
 class CookingClassifier:
     def __init__(self,
                  do_train: bool = True,
@@ -26,15 +27,29 @@ class CookingClassifier:
 
     def execute(self):
         if self.do_train:
-            self._read_data()
-            self._preprocess()
-            self._vectorize()
-            self._label_encoder()
-            self._train_model()
+            self.train()
             print("Trained Model")
         if self.pred_ingredients is not None:
             self.predict()
         print("Finished Execute")
+
+    def train(self):
+        self._read_data()
+        self._preprocess()
+        self._vectorize()
+        self._label_encoder()
+        self._train_model()
+
+    def predict(self):
+        vectorizer = joblib.load(f"{self.asset_file_path}vectorizer.pkl")
+        label_encoder = joblib.load(f"{self.asset_file_path}label_encoder.pickle")
+        classifier = joblib.load(f"{self.asset_file_path}classifier.pickle")
+
+        processed_ingredients = self._process_ingredients(self.pred_ingredients)
+        vectorized_ingredients = vectorizer.transform([processed_ingredients])
+        prediction = label_encoder.inverse_transform(classifier.predict(vectorized_ingredients))
+
+        print(f"Prediction: {prediction}")
 
     def _read_data(self):
         self.train = pd.read_json(f"{self.asset_file_path}train.json")
@@ -98,14 +113,3 @@ class CookingClassifier:
 
         print("Classification Report for Test Data")
         print(classification_report(self.y_true, self.y_pred))
-
-    def predict(self):
-        vectorizer = joblib.load(f"{self.asset_file_path}vectorizer.pkl")
-        label_encoder = joblib.load(f"{self.asset_file_path}label_encoder.pickle")
-        classifier = joblib.load(f"{self.asset_file_path}classifier.pickle")
-
-        processed_ingredients = self._process_ingredients(self.pred_ingredients)
-        vectorized_ingredients = vectorizer.transform([processed_ingredients])
-        prediction = label_encoder.inverse_transform(classifier.predict(vectorized_ingredients))
-
-        print(f"Prediction: {prediction}")
