@@ -19,7 +19,7 @@ class CookingClassifier:
     def __init__(self,
                  do_train: bool = True,
                  pred_ingredients: list = None,
-                 asset_file_path: str = './data/'):
+                 asset_file_path: str = './assets/'):
         """
         A class to train models and predict cuisine classification
 
@@ -47,9 +47,9 @@ class CookingClassifier:
         self._train_model()
 
     def predict(self):
-        vectorizer = joblib.load(f"{self.asset_file_path}vectorizer.pkl")
-        label_encoder = joblib.load(f"{self.asset_file_path}label_encoder.pickle")
-        classifier = joblib.load(f"{self.asset_file_path}classifier.pickle")
+        vectorizer = joblib.load(f"{self.asset_file_path}model/vectorizer.pkl")
+        label_encoder = joblib.load(f"{self.asset_file_path}model/label_encoder.pickle")
+        classifier = joblib.load(f"{self.asset_file_path}model/classifier.pickle")
 
         processed_ingredients = self._process_ingredients(self.pred_ingredients)
         vectorized_ingredients = vectorizer.transform([processed_ingredients])
@@ -58,8 +58,8 @@ class CookingClassifier:
         print(f"Prediction: {prediction}")
 
     def _read_data(self):
-        self.train = pd.read_json(f"{self.asset_file_path}train.json")
-        self.test = pd.read_json(f"{self.asset_file_path}test.json")
+        self.train = pd.read_json(f"{self.asset_file_path}data/train.json")
+        self.test = pd.read_json(f"{self.asset_file_path}data/test.json")
 
         self.train.loc[:, 'num_ingredients'] = self.train.loc[:, 'ingredients'].apply(len)
         self.train = self.train[self.train['num_ingredients'] > 1]
@@ -95,12 +95,12 @@ class CookingClassifier:
         self.x_train = self.vectorizer.fit_transform(self.train['x'].values)
         self.x_train.sort_indices()
         self.x_test = self.vectorizer.transform(self.test['x'].values)
-        joblib.dump(value=self.vectorizer, filename=f"{self.asset_file_path}vectorizer.pkl")
+        joblib.dump(value=self.vectorizer, filename=f"{self.asset_file_path}model/vectorizer.pkl")
 
     def _label_encoder(self):
         self.label_encoder = LabelEncoder()
         self.y_train = self.label_encoder.fit_transform(self.train['cuisine'].values)
-        joblib.dump(value=self.label_encoder, filename=f"{self.asset_file_path}label_encoder.pickle")
+        joblib.dump(value=self.label_encoder, filename=f"{self.asset_file_path}model/label_encoder.pickle")
 
     def _train_model(self):
         self.estimator = SVC(C=80,
@@ -112,7 +112,7 @@ class CookingClassifier:
         self.classifier = OneVsRestClassifier(self.estimator, n_jobs=-1)
         self.classifier.fit(self.x_train, self.y_train)
 
-        joblib.dump(value=self.classifier, filename=f"{self.asset_file_path}classifier.pickle")
+        joblib.dump(value=self.classifier, filename=f"{self.asset_file_path}model/classifier.pickle")
 
         self.y_pred = self.label_encoder.inverse_transform(self.classifier.predict(self.x_train))
         self.y_true = self.label_encoder.inverse_transform(self.y_train)

@@ -13,7 +13,7 @@ flags.DEFINE_list(name="pred_ingredients",
                      help="")
 
 flags.DEFINE_string(name="asset_file_path",
-                     default="./data/",
+                     default="./assets/",
                      help="")
 
 
